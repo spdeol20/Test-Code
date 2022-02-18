@@ -48,7 +48,6 @@ class MainActivity : ComponentActivity() {
     //    @Preview(showBackground = true)
     @Composable
     fun MainContent() {
-        Log.e(TAG, "MainContent: recomposong")
         val data by mainViewModel.getAveragePrice().collectAsState()
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -66,7 +65,6 @@ class MainActivity : ComponentActivity() {
     }
     @Composable
     fun InternetStatus() {
-        Log.e(TAG, "InternetStatus: ")
         val internet by mainViewModel.connectivity.internetStatus.collectAsState()
         when(internet) {
             Internet.NO_INTERNET->{
@@ -75,6 +73,7 @@ class MainActivity : ComponentActivity() {
                     style = MaterialTheme.typography.subtitle1,color = ErrorColor
                 )
             }
+            else -> {}
         }
     }
     @Composable
@@ -106,11 +105,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.e(TAG, "onDestroy: unregister")
-        mainViewModel.unregister()
-    }
 }
 
 

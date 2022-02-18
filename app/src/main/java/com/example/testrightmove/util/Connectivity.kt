@@ -14,57 +14,58 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import javax.inject.Inject
 
 @SuppressLint("NewApi")
-class Connectivity @Inject constructor(@ApplicationContext val context:Context) {
+class Connectivity @Inject constructor(@ApplicationContext val context: Context) {
 
-    private val TAG ="Connectivity"
+    private val TAG = "Connectivity"
     val internetStatus = MutableStateFlow(Internet.INTERNET_AVAILABLE)
-    val connectivityManager
-            = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
     @RequiresApi(Build.VERSION_CODES.M)
     val currentNetwork = connectivityManager.activeNetwork
     val caps = connectivityManager.getNetworkCapabilities(currentNetwork)
     val linkProperties = connectivityManager.getLinkProperties(currentNetwork)
 
-    private fun no_internet() {
+    fun no_internet() {
         internetStatus.value = Internet.NO_INTERNET
 
     }
 
-   private fun internet_available() {
+    private fun internet_available() {
         internetStatus.value = Internet.INTERNET_AVAILABLE
 
     }
 
-    fun hasInternet():Boolean{
+    fun hasInternet(): Boolean {
         return caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
-    fun noInternet():Boolean{
-        return internetStatus.value == Internet.NO_INTERNET
+
+
+    var networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            internet_available()
+        }
+
+        override fun onLost(network: Network) {
+            no_internet()
+        }
+
+        override fun onCapabilitiesChanged(
+            network: Network,
+            networkCapabilities: NetworkCapabilities
+        ) {
+
+        }
+
+        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
+        }
     }
 
     init {
-        Log.e(TAG, "initialise the respopnse helper: ")
-        connectivityManager.registerDefaultNetworkCallback(object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network : Network) {
-                Log.e(TAG, "onCapabilitiesChanged: has onAvailable")
-                internet_available()
-            }
-
-            override fun onLost(network : Network) {
-                Log.e(TAG, "onCapabilitiesChanged: has onLost")
-                no_internet()
-            }
-
-            override fun onCapabilitiesChanged(network : Network, networkCapabilities : NetworkCapabilities) {
-
-            }
-
-            override fun onLinkPropertiesChanged(network : Network, linkProperties : LinkProperties) {
-            }
-        })
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
     }
-    fun unregisterNetworkCallback(){
-        Log.e(TAG, "unregister callback of network ")
-//        connectivityManager.unregisterNetworkCallback(callbackNetwork)
+
+    fun unregisterNetworkCallback() {
+        connectivityManager.unregisterNetworkCallback(networkCallback)
     }
 }
